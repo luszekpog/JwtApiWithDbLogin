@@ -41,6 +41,7 @@ namespace CryptoAPI
                 });
             services.AddMvc();
             services.AddScoped<ICryptoRepository, CryptoRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddDbContext<CryptoContext>(options =>
           options.UseSqlServer(Configuration.GetConnectionString("ConnectionStr")));
             services.AddDbContext<UserConstants>(options =>

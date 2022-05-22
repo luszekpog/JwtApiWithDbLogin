@@ -1,4 +1,5 @@
 ﻿using CryptoAPI.Modules;
+using CryptoAPI.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,19 +9,22 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace CryptoAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class LoginController : ControllerBase
     {
         private readonly IConfiguration _config;
         private readonly UserConstants _userConstants;
-        public LoginController(IConfiguration config, UserConstants userConstants)
+        private readonly IUserRepository _userRepository;
+        public LoginController(IConfiguration config, UserConstants userConstants, IUserRepository userRepository)
         {
             _config = config;
             _userConstants = userConstants;
+            _userRepository = userRepository;
         }
         [AllowAnonymous]
         [HttpPost]
@@ -59,7 +63,7 @@ namespace CryptoAPI.Controllers
 
         private User Authenticate(UserLogin userLogin)
         {
-            var currentUser = _userConstants.Users.FirstOrDefault(o => o.UserName.ToLower() ==
+            var currentUser = _userConstants.UsersTable.FirstOrDefault(o => o.UserName.ToLower() ==
             userLogin.UserName.ToLower() && o.Password == userLogin.Password);
             
             if(currentUser != null)
@@ -67,6 +71,12 @@ namespace CryptoAPI.Controllers
                 return currentUser;
             }
             return null;
+        }
+        [HttpPost]
+        public async Task<ActionResult<User>> RegisterUser([FromBody] User user)
+        {
+            var newUser = await _userRepository.Register(user);
+            return CreatedAtAction(nameof(RegisterUser), new { Id = newUser.Id }, newUser);
         }
     }
 }
